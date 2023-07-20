@@ -1,0 +1,229 @@
+import 'package:flutter/material.dart';
+
+void main() => runApp(BudgetTrackerApp());
+
+class BudgetTrackerApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: HomeScreen(),
+      theme: ThemeData(
+        primaryColor: Colors.purple[700],
+        secondaryHeaderColor: Colors.deepPurple,
+        fontFamily: 'Roboto',
+      ),
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  final List<Category> categories = [
+    Category(name: 'Groceries', expenses: [
+      Expense(amount: 50.0, description: 'Vegetables'),
+      Expense(amount: 30.0, description: 'Snacks'),
+    ]),
+    Category(name: 'Bills', expenses: [
+      Expense(amount: 100.0, description: 'Electricity'),
+      Expense(amount: 50.0, description: 'Water'),
+    ]),
+    // Add more categories and expenses as needed
+  ];
+
+  final double salary = 3000.0; // Update the salary amount here
+
+  double get totalExpenses {
+    return categories
+        .expand((category) => category.expenses)
+        .map((expense) => expense.amount)
+        .fold(0, (previousValue, amount) => previousValue + amount);
+  }
+
+  double get totalIncome {
+    return salary;
+  }
+
+  double get balance {
+    return totalIncome - totalExpenses;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Budget Tracker'),
+      ),
+      body: Container(
+        color: Colors.purple[100], // Light Purple Background Color
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment:
+                MainAxisAlignment.center, // Center align children
+            crossAxisAlignment:
+                CrossAxisAlignment.center, // Center align children
+            children: [
+              Text(
+                'Hello User!',
+                style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Total Balance:',
+                style: TextStyle(fontSize: 24),
+              ),
+              SizedBox(height: 10),
+              DropdownButtonHideUnderline(
+                child: DropdownButton<double>(
+                  items: [
+                    DropdownMenuItem(
+                      value: balance,
+                      child: Text(
+                        '\$${balance.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                  onChanged: (double? value) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ExpenseScreen(
+                          categories: categories,
+                          totalIncome: totalIncome,
+                          totalExpenses: totalExpenses,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.arrow_drop_down),
+                  elevation: 0,
+                ),
+              ),
+              // ... Rest of the code remains unchanged
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Implement code to add new expense
+        },
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class Category {
+  final String name;
+  final List<Expense> expenses;
+
+  Category({required this.name, required this.expenses});
+}
+
+class Expense {
+  final double amount;
+  final String description;
+
+  Expense({required this.amount, required this.description});
+}
+
+class ExpenseScreen extends StatelessWidget {
+  final List<Category> categories;
+  final double totalIncome;
+  final double totalExpenses;
+
+  ExpenseScreen({
+    required this.categories,
+    required this.totalIncome,
+    required this.totalExpenses,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Expense Screen'),
+      ),
+      body: Container(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Total Income: \$${totalIncome.toStringAsFixed(2)}',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'Total Expenses: \$${totalExpenses.toStringAsFixed(2)}',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'Total Balance: \$${(totalIncome - totalExpenses).toStringAsFixed(2)}',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Expense Details:',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Expanded(
+              child: ListView.builder(
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  final category = categories[index];
+                  double totalCategoryExpenses = category.expenses
+                      .map((expense) => expense.amount)
+                      .fold(
+                          0, (previousValue, amount) => previousValue + amount);
+
+                  return Card(
+                    elevation: 2,
+                    child: ExpansionTile(
+                      title: Text(category.name),
+                      leading: Icon(Icons.category, color: Colors.purple[700]),
+                      children: [
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: category.expenses.length,
+                          itemBuilder: (context, index) {
+                            final expense = category.expenses[index];
+                            return ListTile(
+                              title: Text(
+                                'Amount: \$${expense.amount.toStringAsFixed(2)}',
+                              ),
+                              subtitle:
+                                  Text('Description: ${expense.description}'),
+                              trailing: IconButton(
+                                icon: Icon(Icons.delete),
+                                onPressed: () {
+                                  // Implement code to delete expense
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          'Total Category Expenses: \$${totalCategoryExpenses.toStringAsFixed(2)}',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
